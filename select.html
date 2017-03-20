@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<style>
+			*{padding: 0;margin: 0;}
+			body{font-size: 12px;width: 980px;margin: 0 auto; text-align: left;}
+			.form-select{text-align: left;width:200px;}
+			.form-select-input{position: relative;left: 0;top: 0;height:30px;line-height: 30px;}
+			.form-select-input input{border: 1px solid #999;width: 96%;height:28px;line-height: 28px;padding: 0 3px;}
+			.form-select-input span{width:0; height:0; border:8px solid; border-color: rgba(255,255,255,0);border-top-color:#333;position: absolute;top:40%;right: 5%;cursor: pointer;}
+			.form-select-list{background: #fff;line-height: 28px;border: 1px solid #ccc;position: absolute;min-width: 198px;margin-top:5px;display: none;}
+			.form-select-list.active{display: block;}
+			.form-select-list li{list-style: none;padding: 3px 10px;text-align: left;}
+			.form-select-list li:hover{background: #ccc;cursor: pointer;}
+		</style>
+	</head>
+	<body>
+		<div id="app">
+			<form-select v-model="value" selected="5"  @select-change="change">
+				<select-option value="">请选择</select-option>
+				<select-option value="1">下拉1</select-option>
+				<select-option value="2">下拉2</select-option>
+				<select-option value="3">下拉3</select-option>
+				<select-option value="4">下拉4</select-option>
+				<select-option value="5">下拉5</select-option>
+			</form-select>
+			
+			<script type="text/template" id="form-select">
+				<div class="form-select">
+					<div class="form-select-input">
+						<input placeholder="请选择" v-model="text" disabled="true" />
+						<span @click="showSelect(true)"></span>
+					</div>
+					<div class="form-select-list" :class="{active:showFlag}">
+						<ul>
+							<slot></slot>
+						</ul>
+					</div>
+				</div>
+			</script>
+			<script type="text/template" id="select-option">
+				<li @click="select(value)"><slot></slot></li>
+			</script>
+		</div>
+		<script src="js/vue.min.js"></script>
+		<script>
+			new Vue({
+				el:"#app",
+				data:{
+					value:""
+				},
+				methods:{
+					change:function(val){
+						console.log(val)
+					}
+				},
+				components:{
+					"form-select":{
+						template:"#form-select",
+						data:function(){
+							return {
+								showFlag:false,
+								value:"",
+								text:""
+							}
+						},
+						props:["selected"],
+						methods:{
+							showSelect:function(flag){
+								var _this=this;
+								setTimeout(function(){
+										_this.showFlag=true;
+								},0);
+							}
+						},
+						created:function(){
+							var _this=this;
+							document.addEventListener("click",function(){
+								if(_this.showFlag==true){
+									_this.showFlag=false;
+								}
+							},false)
+							
+							var i=0;
+							this.$on("setvalue",function(val,text){
+								this.value=val;
+								this.text=text;
+								this.$emit("input",val);
+								i>0?this.$emit("select-change",val):i++;
+							});
+							
+							if(!this.selected){
+								i++;
+							}
+							
+						}
+					},
+					"select-option":{
+						template:"#select-option",
+						data:function(){
+							return {
+								value:""
+							}
+						},
+						props:["value"],
+						methods:{
+							select:function(){
+								this.$parent.$emit("setvalue",this.value,this.$el.innerText);
+							}
+						},
+						mounted:function(){
+							if(this.$parent.selected==this.value){
+								this.$parent.$emit("setvalue",this.value,this.$el.innerText);
+							}
+						}
+
+					}
+				}
+			})
+		</script>
+	</body>
+</html>
